@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#378ADD">
+  <title>Join Queue</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --blue: #1a3a52;
+      --blue-dark: #0f2438;
+      --gold: #D4AF37;
+      --green: #27ae60;
+      --green-light: #D5F4E6;
+      --gray-light: #F5F5F5;
+      --gray-bg: #FAFAF8;
+      --gray-border: #D3D1C7;
+      --gray-text: #2C2C2C;
+      --gray-text-light: #666666;
+      --white: #FFFFFF;
+      --radius: 8px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--gray-text);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 48px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--gray-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--gray-text-light);
+      margin-bottom: 2rem;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid var(--gray-border);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(26, 58, 82, 0.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(26, 58, 82, 0.4);
+      background: linear-gradient(135deg, var(--gold) 0%, #C9A227 100%);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .success-message {
+      background: var(--green-light);
+      color: var(--green);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      text-align: center;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    .success-icon {
+      font-size: 48px;
+      margin-bottom: 1rem;
+    }
+
+    .success-name {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--green);
+      margin-bottom: 0.5rem;
+    }
+
+    .success-text {
+      font-size: 14px;
+      margin-bottom: 1rem;
+    }
+
+    .queue-number {
+      background: var(--green);
+      color: var(--white);
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      margin: 1rem auto;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid var(--gray-light);
+      border-top: 4px solid var(--blue);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .info-text {
+      font-size: 12px;
+      color: var(--gray-text-light);
+      margin-top: 1rem;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+      margin-top: 0.5rem;
+    }
+
+    button.secondary:hover {
+      background: rgba(55, 138, 221, 0.05);
+    }
+
+    .window-group {
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .window-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-text);
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .window-options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+    }
+
+    .window-option input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .window-option label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 0;
+      border: 2px solid var(--gray-border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .window-option input:checked + label {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .window-value {
+      color: var(--blue-dark);
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.5rem;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      input[type="text"] {
+        padding: 0.75rem;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 0.75rem;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="logo">📋</div>
+      <h1>Join the Queue</h1>
+      <p class="subtitle">Enter your name to get started</p>
+
+      <div class="success-message" id="successMessage">
+        <div class="success-icon">✓</div>
+        <div class="success-name" id="successName"></div>
+        <div class="success-text">You've been added to the queue!</div>
+        <div class="queue-number" id="queuePosition"></div>
+        <div class="success-text">Your position in the queue</div>
+        <div class="success-text">Please proceed to <span class="window-value" id="successWindow"></span> when called</div>
+        <button class="secondary" onclick="reset()">Add Another Person</button>
+      </div>
+
+      <div class="loading" id="loadingMessage">
+        <div class="spinner"></div>
+        <p>Adding to queue...</p>
+      </div>
+
+      <div id="formContainer">
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="nameInput" 
+            placeholder="Enter your name"
+            autocomplete="off"
+            onkeypress="if(event.key==='Enter') submitName()"
+          >
+        </div>
+        <div class="window-group">
+          <span class="window-label">Select your window</span>
+          <div class="window-options">
+            <div class="window-option">
+              <input type="radio" name="window" id="window1" value="Window 1" checked>
+              <label for="window1">Window 1</label>
+            </div>
+            <div class="window-option">
+              <input type="radio" name="window" id="window2" value="Window 2">
+              <label for="window2">Window 2</label>
+            </div>
+            <div class="window-option">
+              <input type="radio" name="window" id="window3" value="Window 3">
+              <label for="window3">Window 3</label>
+            </div>
+          </div>
+        </div>
+        <button onclick="submitName()">Join Queue</button>
+        <p class="info-text">Your name will appear in the waiting list instantly</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'queue_system_data';
+
+    function loadQueue() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : { queue: [], announced: null };
+      } catch {
+        return { queue: [], announced: null };
+      }
+    }
+
+    function saveQueue(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('Storage error:', e);
+      }
+    }
+
+    function submitName() {
+      const input = document.getElementById('nameInput');
+      const name = input.value.trim();
+      const windowChoice = document.querySelector('input[name="window"]:checked').value;
+
+      if (!name) {
+        input.focus();
+        return;
+      }
+
+      // Show loading
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('loadingMessage').classList.add('show');
+
+      // Simulate slight delay for better UX
+      setTimeout(() => {
+        // Add to queue
+        const data = loadQueue();
+        data.queue.push({ name: name, window: windowChoice });
+        saveQueue(data);
+
+        // Show success
+        document.getElementById('loadingMessage').classList.remove('show');
+        document.getElementById('successMessage').classList.add('show');
+        document.getElementById('successName').textContent = name;
+        document.getElementById('queuePosition').textContent = data.queue.length;
+        document.getElementById('successWindow').textContent = windowChoice;
+
+        // Vibrate if available
+        if (navigator.vibrate) {
+          navigator.vibrate(200);
+        }
+      }, 500);
+    }
+
+    function reset() {
+      document.getElementById('nameInput').value = '';
+      document.getElementById('window1').checked = true;
+      document.getElementById('successMessage').classList.remove('show');
+      document.getElementById('formContainer').style.display = 'block';
+      document.getElementById('nameInput').focus();
+    }
+
+    // Focus input on load
+    document.getElementById('nameInput').focus();
+  </script>
+</body>
+</html>
