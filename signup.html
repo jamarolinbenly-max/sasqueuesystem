@@ -361,6 +361,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    function formatName(name) {
+      return name.replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+    }
+
     function submitName() {
       const input = document.getElementById('nameInput');
       const name = input.value.trim();
@@ -390,7 +394,7 @@
         // Show success
         document.getElementById('loadingMessage').classList.remove('show');
         document.getElementById('successMessage').classList.add('show');
-        document.getElementById('successName').textContent = name;
+        document.getElementById('successName').textContent = formatName(name);
         document.getElementById('queuePosition').textContent = position;
         document.getElementById('successWindow').textContent = windowChoice;
 

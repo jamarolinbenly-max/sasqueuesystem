@@ -88,6 +88,14 @@
       gap: 1rem;
     }
 
+    .main-row {
+      display: flex;
+      flex-direction: row;
+      gap: 1rem;
+      flex: 1;
+      min-height: 0;
+    }
+
     .card {
       background: var(--gray-bg);
       border: 1px solid var(--gray-border);
@@ -196,7 +204,8 @@
     }
 
     .queue-count {
-      font-size: 12px;
+      font-size: 14px;
+      font-weight: 600;
       color: var(--gray-text-light);
       margin: 0.5rem 0;
     }
@@ -213,11 +222,11 @@
       padding: 2rem 1rem;
       text-align: center;
       color: var(--gray-text-light);
-      font-size: 14px;
+      font-size: 16px;
     }
 
     .queue-item {
-      padding: 1rem;
+      padding: 1.25rem 1.25rem;
       border-bottom: 1px solid var(--gray-border);
       display: flex;
       align-items: center;
@@ -236,7 +245,7 @@
     .queue-item-info {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 1.25rem;
       flex: 1;
       min-width: 0;
     }
@@ -244,19 +253,20 @@
     .queue-item-number {
       background: var(--blue);
       color: var(--white);
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 600;
-      font-size: 12px;
+      font-weight: 700;
+      font-size: 18px;
       flex-shrink: 0;
     }
 
     .queue-item-name {
-      font-weight: 500;
+      font-weight: 600;
+      font-size: 18px;
       color: var(--gray-text);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -291,6 +301,10 @@
         padding: 0.75rem;
       }
 
+      .main-row {
+        flex-direction: column;
+      }
+
       .announce-display {
         min-height: 120px;
         padding: 1.5rem 1rem;
@@ -323,7 +337,7 @@
     </div>
 
     <div class="content">
-      <div class="card">
+      <div class="card" style="padding: 0.75rem;">
         <div class="input-group">
           <input 
             type="text" 
@@ -341,19 +355,21 @@
         <div class="queue-count" id="queueCount">0 people waiting</div>
       </div>
 
-      <div class="card announce-section">
-        <div style="font-size: 12px; color: var(--gray-text-light); margin-bottom: 0.5rem;">Now calling</div>
-        <div class="announce-display">
-          <div class="announce-label">Next</div>
-          <div class="announce-name" id="announcedName">—</div>
-          <div class="announce-label" id="announcedWindow" style="margin-top: 0.5rem; font-size: 16px; letter-spacing: normal; text-transform: none; opacity: 1;"></div>
+      <div class="main-row">
+        <div class="card announce-section" style="padding: 1rem; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+          <div style="font-size: 12px; color: var(--gray-text-light); margin-bottom: 0.5rem;">Now calling</div>
+          <div class="announce-display" style="flex: 1; min-height: 0;">
+            <div class="announce-label">Next</div>
+            <div class="announce-name" id="announcedName" style="font-size: 40px;">—</div>
+            <div class="announce-label" id="announcedWindow" style="margin-top: 0.5rem; font-size: 16px; letter-spacing: normal; text-transform: none; opacity: 1;"></div>
+          </div>
         </div>
-      </div>
 
-      <div class="card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-        <div style="font-size: 14px; font-weight: 600; color: var(--gray-text); margin-bottom: 0.75rem;">Queue</div>
-        <div class="queue-list scrollbar-hide" id="queueList">
-          <div class="queue-empty">No one in queue yet</div>
+        <div class="card" style="flex: 1.4; display: flex; flex-direction: column; min-height: 0; padding: 0.75rem;">
+          <div style="font-size: 16px; font-weight: 700; color: var(--gray-text); margin-bottom: 0.5rem;">Queue</div>
+          <div class="queue-list scrollbar-hide" id="queueList">
+            <div class="queue-empty">No one in queue yet</div>
+          </div>
         </div>
       </div>
 
@@ -363,12 +379,12 @@
         <button class="btn-danger" style="flex: 0 0 auto;" onclick="clearQueue()">Clear</button>
       </div>
 
-      <div style="margin-top: 1rem; padding: 1rem; background: var(--gray-light); border-radius: var(--radius); border: 1px solid var(--gray-border);">
-        <label style="font-size: 12px; font-weight: 600; color: var(--gray-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+      <div style="margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: var(--gray-light); border-radius: var(--radius); border: 1px solid var(--gray-border);">
+        <label style="font-size: 11px; font-weight: 600; color: var(--gray-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
           <input type="checkbox" id="enableVoice" checked>
           Read name aloud in Tagalog when calling next
         </label>
-        <label style="font-size: 12px; font-weight: 600; color: var(--gray-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 0.5rem;">
+        <label style="font-size: 11px; font-weight: 600; color: var(--gray-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 0.3rem;">
           <input type="checkbox" id="enableSound" checked>
           Play bell sound when calling next
         </label>
@@ -404,6 +420,10 @@
       return div.innerHTML;
     }
 
+    function formatName(name) {
+      return name.replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+    }
+
     function renderQueueList() {
       const list = document.getElementById('queueList');
       const count = document.getElementById('queueCount');
@@ -419,7 +439,7 @@
         <div class="queue-item">
           <div class="queue-item-info">
             <div class="queue-item-number">${idx + 1}</div>
-            <div class="queue-item-name">${escapeHtml(entry.name)}${entry.window ? ' <span style="color: var(--gray-text-light); font-weight: 400;">&middot; ' + escapeHtml(entry.window) + '</span>' : ''}</div>
+            <div class="queue-item-name">${escapeHtml(formatName(entry.name))}${entry.window ? ' <span style="color: var(--gray-text-light); font-weight: 400;">&middot; ' + escapeHtml(entry.window) + '</span>' : ''}</div>
           </div>
           <button class="btn-danger" style="padding: 0.5rem 0.75rem; font-size: 12px;" onclick="removeFromQueue('${entry.key}')">Remove</button>
         </div>
@@ -431,7 +451,7 @@
       const announcedWindow = document.getElementById('announcedWindow');
 
       if (entry) {
-        announced.textContent = entry.name;
+        announced.textContent = formatName(entry.name);
         announcedWindow.textContent = entry.window ? ('Please proceed to ' + entry.window) : '';
       } else {
         announced.textContent = '—';
