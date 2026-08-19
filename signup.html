@@ -344,25 +344,22 @@
     </div>
   </div>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
   <script>
-    const STORAGE_KEY = 'queue_system_data';
-
-    function loadQueue() {
-      try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : { queue: [], announced: null };
-      } catch {
-        return { queue: [], announced: null };
-      }
-    }
-
-    function saveQueue(data) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      } catch (e) {
-        console.error('Storage error:', e);
-      }
-    }
+    const firebaseConfig = {
+      apiKey: "AIzaSyAoT9t1c9vmXdXuURBaxTUVaKG_vhl7xmA",
+      authDomain: "sasqueueingsystem.firebaseapp.com",
+      databaseURL: "https://sasqueueingsystem-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sasqueueingsystem",
+      storageBucket: "sasqueueingsystem.firebasestorage.app",
+      messagingSenderId: "889117047176",
+      appId: "1:889117047176:web:273f04ba1f24f295f2e23d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     function submitName() {
       const input = document.getElementById('nameInput');
@@ -378,25 +375,35 @@
       document.getElementById('formContainer').style.display = 'none';
       document.getElementById('loadingMessage').classList.add('show');
 
-      // Simulate slight delay for better UX
-      setTimeout(() => {
-        // Add to queue
-        const data = loadQueue();
-        data.queue.push({ name: name, window: windowChoice });
-        saveQueue(data);
+      const queueRef = db.ref('queue');
+      const newEntryRef = queueRef.push();
+
+      newEntryRef.set({
+        name: name,
+        window: windowChoice,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        return queueRef.once('value');
+      }).then((snapshot) => {
+        const position = snapshot.numChildren();
 
         // Show success
         document.getElementById('loadingMessage').classList.remove('show');
         document.getElementById('successMessage').classList.add('show');
         document.getElementById('successName').textContent = name;
-        document.getElementById('queuePosition').textContent = data.queue.length;
+        document.getElementById('queuePosition').textContent = position;
         document.getElementById('successWindow').textContent = windowChoice;
 
         // Vibrate if available
         if (navigator.vibrate) {
           navigator.vibrate(200);
         }
-      }, 500);
+      }).catch((err) => {
+        document.getElementById('loadingMessage').classList.remove('show');
+        document.getElementById('formContainer').style.display = 'block';
+        alert('Could not join the queue. Please check your connection and try again.');
+        console.error(err);
+      });
     }
 
     function reset() {
