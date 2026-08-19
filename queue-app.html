@@ -376,25 +376,27 @@
     </div>
   </div>
 
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
   <script>
-    const STORAGE_KEY = 'queue_system_data';
+    const firebaseConfig = {
+      apiKey: "AIzaSyAoT9t1c9vmXdXuURBaxTUVaKG_vhl7xmA",
+      authDomain: "sasqueueingsystem.firebaseapp.com",
+      databaseURL: "https://sasqueueingsystem-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sasqueueingsystem",
+      storageBucket: "sasqueueingsystem.firebasestorage.app",
+      messagingSenderId: "889117047176",
+      appId: "1:889117047176:web:273f04ba1f24f295f2e23d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const queueRef = db.ref('queue');
+    const announcedRef = db.ref('announced');
 
-    function loadQueue() {
-      try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        return data ? JSON.parse(data) : { queue: [], announced: null };
-      } catch {
-        return { queue: [], announced: null };
-      }
-    }
-
-    function saveQueue(data) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      } catch (e) {
-        console.error('Storage error:', e);
-      }
-    }
+    // Keeps the latest snapshot of the queue in chronological order
+    let currentQueue = []; // [{ key, name, window }]
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -402,38 +404,58 @@
       return div.innerHTML;
     }
 
-    function renderQueue() {
-      const data = loadQueue();
+    function renderQueueList() {
       const list = document.getElementById('queueList');
       const count = document.getElementById('queueCount');
-      const announced = document.getElementById('announcedName');
-      const announcedWindow = document.getElementById('announcedWindow');
 
-      count.textContent = data.queue.length + ' ' + (data.queue.length === 1 ? 'person' : 'people') + ' waiting';
+      count.textContent = currentQueue.length + ' ' + (currentQueue.length === 1 ? 'person' : 'people') + ' waiting';
 
-      if (data.announced) {
-        announced.textContent = data.announced.name;
-        announcedWindow.textContent = data.announced.window ? ('Please proceed to ' + data.announced.window) : '';
-      } else {
-        announced.textContent = '—';
-        announcedWindow.textContent = '';
-      }
-
-      if (data.queue.length === 0) {
+      if (currentQueue.length === 0) {
         list.innerHTML = '<div class="queue-empty">No one in queue yet</div>';
         return;
       }
 
-      list.innerHTML = data.queue.map((entry, idx) => `
+      list.innerHTML = currentQueue.map((entry, idx) => `
         <div class="queue-item">
           <div class="queue-item-info">
             <div class="queue-item-number">${idx + 1}</div>
             <div class="queue-item-name">${escapeHtml(entry.name)}${entry.window ? ' <span style="color: var(--gray-text-light); font-weight: 400;">&middot; ' + escapeHtml(entry.window) + '</span>' : ''}</div>
           </div>
-          <button class="btn-danger" style="padding: 0.5rem 0.75rem; font-size: 12px;" onclick="removeFromQueue(${idx})">Remove</button>
+          <button class="btn-danger" style="padding: 0.5rem 0.75rem; font-size: 12px;" onclick="removeFromQueue('${entry.key}')">Remove</button>
         </div>
       `).join('');
     }
+
+    function renderAnnounced(entry) {
+      const announced = document.getElementById('announcedName');
+      const announcedWindow = document.getElementById('announcedWindow');
+
+      if (entry) {
+        announced.textContent = entry.name;
+        announcedWindow.textContent = entry.window ? ('Please proceed to ' + entry.window) : '';
+      } else {
+        announced.textContent = '—';
+        announcedWindow.textContent = '';
+      }
+    }
+
+    // Live sync: fires immediately on load and every time the data changes,
+    // from any device.
+    queueRef.orderByChild('timestamp').on('value', (snapshot) => {
+      const entries = [];
+      snapshot.forEach((child) => {
+        const val = child.val();
+        entries.push({ key: child.key, name: val.name, window: val.window });
+      });
+      currentQueue = entries;
+      renderQueueList();
+    });
+
+    let lastAnnounced = null;
+    announcedRef.on('value', (snapshot) => {
+      lastAnnounced = snapshot.val();
+      renderAnnounced(lastAnnounced);
+    });
 
     function addToQueue() {
       const input = document.getElementById('nameInput');
@@ -445,19 +467,21 @@
         return;
       }
 
-      const data = loadQueue();
-      data.queue.push({ name: name, window: windowChoice });
-      saveQueue(data);
+      queueRef.push({
+        name: name,
+        window: windowChoice,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).catch((err) => {
+        alert('Could not add to queue. Check your connection.');
+        console.error(err);
+      });
+
       input.value = '';
       input.focus();
-      renderQueue();
     }
 
-    function removeFromQueue(idx) {
-      const data = loadQueue();
-      data.queue.splice(idx, 1);
-      saveQueue(data);
-      renderQueue();
+    function removeFromQueue(key) {
+      queueRef.child(key).remove();
     }
 
     function playBellSound() {
@@ -523,12 +547,14 @@
     }
 
     function announceNext() {
-      const data = loadQueue();
-      if (data.queue.length > 0) {
-        data.announced = data.queue.shift();
-        saveQueue(data);
-        renderQueue();
+      if (currentQueue.length === 0) return;
 
+      const next = currentQueue[0]; // earliest by timestamp
+      const announcedEntry = { name: next.name, window: next.window };
+
+      announcedRef.set(announcedEntry).then(() => {
+        return queueRef.child(next.key).remove();
+      }).then(() => {
         // Play sound effect
         if (document.getElementById('enableSound').checked) {
           playBellSound();
@@ -537,23 +563,23 @@
         // Announce name and window
         if (document.getElementById('enableVoice').checked) {
           setTimeout(() => {
-            speakName(data.announced.name, data.announced.window);
+            speakName(announcedEntry.name, announcedEntry.window);
           }, 500);
         }
-      }
+      }).catch((err) => {
+        alert('Could not call next in queue. Check your connection.');
+        console.error(err);
+      });
     }
 
     function resetAnnounced() {
-      const data = loadQueue();
-      data.announced = null;
-      saveQueue(data);
-      renderQueue();
+      announcedRef.remove();
     }
 
     function clearQueue() {
       if (confirm('Clear all entries in the queue?')) {
-        saveQueue({ queue: [], announced: null });
-        renderQueue();
+        queueRef.remove();
+        announcedRef.remove();
       }
     }
 
@@ -567,44 +593,17 @@
       const name = params.get('name');
       const windowChoice = params.get('window');
       if (name) {
-        const data = loadQueue();
-        data.queue.push({
+        queueRef.push({
           name: decodeURIComponent(name),
-          window: windowChoice ? decodeURIComponent(windowChoice) : 'Window 1'
+          window: windowChoice ? decodeURIComponent(windowChoice) : 'Window 1',
+          timestamp: firebase.database.ServerValue.TIMESTAMP
         });
-        saveQueue(data);
-        renderQueue();
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
 
     checkUrlParams();
-
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE = 'queue-app-v1';
-        const urlsToCache = ['/'];
-
-        self.addEventListener('install', e => {
-          self.skipWaiting();
-        });
-
-        self.addEventListener('fetch', e => {
-          e.respondWith(
-            caches.match(e.request).catch(() => fetch(e.request))
-          );
-        });
-      `;
-
-      const blob = new Blob([swCode], { type: 'application/javascript' });
-      const swUrl = URL.createObjectURL(blob);
-
-      navigator.serviceWorker.register(swUrl).catch(() => {});
-    }
-
-    renderQueue();
   </script>
 </body>
 </html>
