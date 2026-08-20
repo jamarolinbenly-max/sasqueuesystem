@@ -4,25 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Simple queue management system with QR code scanning">
-  <title>Queue System</title>
-  <link rel="manifest" href="data:application/json,{
-    \"name\": \"Queue System\",
-    \"short_name\": \"Queue\",
-    \"start_url\": \".\",
-    \"display\": \"standalone\",
-    \"background_color\": \"#ffffff\",
-    \"theme_color\": \"#378ADD\",
-    \"icons\": [
-      {
-        \"src\": \"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%23378ADD' width='192' height='192'/%3E%3Ctext x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'%3EQ%3C/text%3E%3C/svg%3E\",
-        \"sizes\": \"192x192\",
-        \"type\": \"image/svg+xml\",
-        \"purpose\": \"any\"
-      }
-    ]
-  }">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23378ADD' width='100' height='100'/%3E%3Ctext x='50' y='55' font-size='60' font-weight='bold' fill='white' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+  <meta name="description" content="Multi-window queue management system">
+  <title>SAS Queuing System - Admin Dashboard</title>
   <style>
     * {
       margin: 0;
@@ -56,13 +39,59 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      margin: 0;
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .navbar-brand {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .navbar-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.3s;
+      border-bottom: 2px solid transparent;
+      padding-bottom: 0.25rem;
+    }
+
+    .navbar-links a:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .navbar-links a.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
     }
 
     .container {
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      height: calc(100vh - 65px);
       background: var(--white);
+      flex: 1;
+      overflow: hidden;
     }
 
     .header {
@@ -88,15 +117,7 @@
       gap: 1rem;
     }
 
-    .main-row {
-      display: flex;
-      flex-direction: row;
-      gap: 1rem;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .card {
+    .input-section {
       background: var(--gray-bg);
       border: 1px solid var(--gray-border);
       border-radius: var(--radius);
@@ -106,9 +127,10 @@
     .input-group {
       display: flex;
       gap: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
-    input[type="text"] {
+    input[type="text"], select {
       flex: 1;
       padding: 0.75rem;
       border: 1px solid var(--gray-border);
@@ -117,7 +139,7 @@
       font-family: inherit;
     }
 
-    input[type="text"]:focus {
+    input[type="text"]:focus, select:focus {
       outline: none;
       border-color: var(--blue);
       box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.1);
@@ -146,10 +168,6 @@
       box-shadow: 0 4px 12px rgba(26, 58, 82, 0.3);
     }
 
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
     .btn-secondary {
       background: transparent;
       border: 1px solid var(--gray-border);
@@ -158,136 +176,193 @@
 
     .btn-secondary:hover {
       background: var(--gray-light);
-      border-color: var(--gray-text-light);
     }
 
     .btn-danger {
       background: transparent;
       border: 1px solid var(--red);
       color: var(--red);
+      padding: 0.5rem 0.75rem;
+      font-size: 12px;
     }
 
     .btn-danger:hover {
       background: rgba(211, 47, 47, 0.1);
     }
 
-    .announce-section {
+    .windows-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .window-card {
+      background: var(--white);
+      border: 2px solid var(--gray-border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .window-header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 0.75rem;
+      border-radius: 6px;
       text-align: center;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
     }
 
     .announce-display {
       background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
       color: var(--white);
-      border-radius: 12px;
-      padding: 2rem 1rem;
-      min-height: 140px;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      border-top: 3px solid var(--gold);
+      min-height: 80px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 16px rgba(26, 58, 82, 0.3);
-      border-top: 4px solid var(--gold);
     }
 
     .announce-label {
-      font-size: 12px;
+      font-size: 11px;
       opacity: 0.9;
-      margin-bottom: 0.5rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      margin-bottom: 0.3rem;
     }
 
     .announce-name {
-      font-size: 48px;
+      font-size: 28px;
       font-weight: 700;
       word-break: break-word;
-    }
-
-    .queue-count {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--gray-text-light);
-      margin: 0.5rem 0;
     }
 
     .queue-list {
       flex: 1;
       overflow-y: auto;
       border: 1px solid var(--gray-border);
-      border-radius: var(--radius);
-      background: var(--white);
+      border-radius: 6px;
+      background: var(--gray-bg);
+      margin-bottom: 0.75rem;
+      min-height: 100px;
     }
 
     .queue-empty {
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
       text-align: center;
       color: var(--gray-text-light);
-      font-size: 16px;
+      font-size: 12px;
     }
 
     .queue-item {
-      padding: 1.25rem 1.25rem;
+      padding: 0.75rem;
       border-bottom: 1px solid var(--gray-border);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 0.75rem;
       transition: background 0.2s;
     }
 
     .queue-item:hover {
-      background: var(--gray-light);
+      background: var(--white);
     }
 
     .queue-item:last-child {
       border-bottom: none;
     }
 
-    .queue-item-info {
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .queue-item-number {
+    .queue-number {
       background: var(--blue);
       color: var(--white);
-      width: 44px;
-      height: 44px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 18px;
+      font-size: 10px;
+      font-weight: 600;
       flex-shrink: 0;
     }
 
-    .queue-item-name {
-      font-weight: 600;
-      font-size: 18px;
+    .queue-name {
+      font-weight: 500;
+      font-size: 13px;
       color: var(--gray-text);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .button-group button {
       flex: 1;
     }
 
-    .full-width {
-      width: 100%;
+    .window-buttons {
+      display: flex;
+      gap: 0.5rem;
     }
 
-    @media (max-width: 480px) {
+    .window-buttons button {
+      flex: 1;
+      padding: 0.6rem 0.75rem;
+      font-size: 13px;
+    }
+
+    .settings {
+      background: var(--gray-light);
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      margin-top: 1rem;
+    }
+
+    .settings label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 0.4rem;
+    }
+
+    .settings label:last-child {
+      margin-bottom: 0;
+    }
+
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
+      .windows-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 0.75rem 1rem;
+      }
+
+      .navbar-brand {
+        font-size: 16px;
+      }
+
+      .navbar-links {
+        gap: 1rem;
+      }
+
+      .navbar-links a {
+        font-size: 12px;
+      }
+
       .header h1 {
         font-size: 24px;
       }
@@ -297,25 +372,20 @@
         gap: 0.75rem;
       }
 
-      .card {
+      .windows-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .window-card {
         padding: 0.75rem;
       }
 
-      .main-row {
-        flex-direction: column;
-      }
-
-      .announce-display {
-        min-height: 120px;
-        padding: 1.5rem 1rem;
-      }
-
       .announce-name {
-        font-size: 36px;
+        font-size: 24px;
       }
 
       button {
-        padding: 0.65rem 1rem;
+        padding: 0.6rem 1rem;
         font-size: 13px;
       }
     }
@@ -331,68 +401,55 @@
   </style>
 </head>
 <body>
+  <nav class="navbar">
+    <div class="navbar-brand">SAS Queuing System</div>
+    <div class="navbar-links">
+      <a href="index.html">Home</a>
+      <a href="queue-app.html" class="active">Admin Dashboard</a>
+      <a href="signup.html">Join Queue</a>
+    </div>
+  </nav>
+
   <div class="container">
     <div class="header">
-      <h1>SAS Queuing System</h1>
+      <h1>SAS Queuing System - Multi-Window Dashboard</h1>
     </div>
 
     <div class="content">
-      <div class="card" style="padding: 0.75rem;">
+      <div class="input-section">
         <div class="input-group">
           <input 
             type="text" 
             id="nameInput" 
-            placeholder="Enter name or scan QR code"
+            placeholder="Enter name"
             autocomplete="off"
+            onkeypress="if(event.key==='Enter') addToQueue()"
           >
-          <select id="windowSelect" style="padding: 0.75rem; border: 1px solid var(--gray-border); border-radius: var(--radius); font-size: 14px; font-family: inherit;">
+          <select id="windowSelect" style="width: 140px;">
+            <option value="">Select Window</option>
             <option value="Window 1">Window 1</option>
             <option value="Window 2">Window 2</option>
             <option value="Window 3">Window 3</option>
           </select>
           <button class="btn-primary" onclick="addToQueue()">Add</button>
         </div>
-        <div class="queue-count" id="queueCount">0 people waiting</div>
       </div>
 
-      <div class="main-row">
-        <div class="card announce-section" style="padding: 1rem; flex: 1; display: flex; flex-direction: column; min-height: 0;">
-          <div style="font-size: 12px; color: var(--gray-text-light); margin-bottom: 0.5rem;">Now calling</div>
-          <div class="announce-display" style="flex: 1; min-height: 0;">
-            <div class="announce-label">Next</div>
-            <div class="announce-name" id="announcedName" style="font-size: 40px;">—</div>
-            <div class="announce-label" id="announcedWindow" style="margin-top: 0.5rem; font-size: 16px; letter-spacing: normal; text-transform: none; opacity: 1;"></div>
-          </div>
-        </div>
-
-        <div class="card" style="flex: 1.4; display: flex; flex-direction: column; min-height: 0; padding: 0.75rem;">
-          <div style="font-size: 16px; font-weight: 700; color: var(--gray-text); margin-bottom: 0.5rem;">Queue</div>
-          <div class="queue-list scrollbar-hide" id="queueList">
-            <div class="queue-empty">No one in queue yet</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="button-group">
-        <button class="btn-primary" style="flex: 1;" onclick="announceNext()">Call Next</button>
-        <button class="btn-secondary" style="flex: 0 0 auto;" onclick="resetAnnounced()">Reset</button>
-        <button class="btn-danger" style="flex: 0 0 auto;" onclick="clearQueue()">Clear</button>
-      </div>
-
-      <div style="margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: var(--gray-light); border-radius: var(--radius); border: 1px solid var(--gray-border);">
-        <label style="font-size: 11px; font-weight: 600; color: var(--gray-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-          <input type="checkbox" id="enableVoice" checked>
-          Read name aloud in Tagalog when calling next
-        </label>
-        <label style="font-size: 11px; font-weight: 600; color: var(--gray-text); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-top: 0.3rem;">
-          <input type="checkbox" id="enableSound" checked>
-          Play bell sound when calling next
-        </label>
-      </div>
+      <div class="windows-grid scrollbar-hide" id="windowsGrid"></div>
     </div>
   </div>
 
-  <!-- Firebase -->
+  <div class="settings">
+    <label>
+      <input type="checkbox" id="enableVoice" checked>
+      Read name aloud in Tagalog when calling next
+    </label>
+    <label>
+      <input type="checkbox" id="enableSound" checked>
+      Play bell sound when calling next
+    </label>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
@@ -411,8 +468,11 @@
     const queueRef = db.ref('queue');
     const announcedRef = db.ref('announced');
 
-    // Keeps the latest snapshot of the queue in chronological order
-    let currentQueue = []; // [{ key, name, window }]
+    const WINDOWS = ['Window 1', 'Window 2', 'Window 3'];
+
+    // Grouped by window, rebuilt every time Firebase pushes an update
+    let currentQueues = { 'Window 1': [], 'Window 2': [], 'Window 3': [] };
+    let currentAnnounced = {};
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -424,66 +484,83 @@
       return name.replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
     }
 
-    function renderQueueList() {
-      const list = document.getElementById('queueList');
-      const count = document.getElementById('queueCount');
+    function renderAllWindows() {
+      const grid = document.getElementById('windowsGrid');
 
-      count.textContent = currentQueue.length + ' ' + (currentQueue.length === 1 ? 'person' : 'people') + ' waiting';
-
-      if (currentQueue.length === 0) {
-        list.innerHTML = '<div class="queue-empty">No one in queue yet</div>';
-        return;
-      }
-
-      list.innerHTML = currentQueue.map((entry, idx) => `
-        <div class="queue-item">
-          <div class="queue-item-info">
-            <div class="queue-item-number">${idx + 1}</div>
-            <div class="queue-item-name">${escapeHtml(formatName(entry.name))}${entry.window ? ' <span style="color: var(--gray-text-light); font-weight: 400;">&middot; ' + escapeHtml(entry.window) + '</span>' : ''}</div>
+      grid.innerHTML = WINDOWS.map(w => `
+        <div class="window-card">
+          <div class="window-header">${w}</div>
+          
+          <div class="announce-display">
+            <div class="announce-label">Now Calling</div>
+            <div class="announce-name" id="announced-${w}">—</div>
           </div>
-          <button class="btn-danger" style="padding: 0.5rem 0.75rem; font-size: 12px;" onclick="removeFromQueue('${entry.key}')">Remove</button>
+
+          <div class="queue-list scrollbar-hide" id="queue-${w}">
+            <div class="queue-empty">No one in queue</div>
+          </div>
+
+          <div class="window-buttons">
+            <button class="btn-primary" onclick="announceNext('${w}')">Call Next</button>
+            <button class="btn-secondary" onclick="resetAnnounced('${w}')">Reset</button>
+          </div>
         </div>
       `).join('');
+
+      WINDOWS.forEach(w => {
+        const queueElement = document.getElementById(`queue-${w}`);
+        const announcedElement = document.getElementById(`announced-${w}`);
+        const entries = currentQueues[w] || [];
+
+        // Show announced person
+        if (currentAnnounced[w] && currentAnnounced[w].name) {
+          announcedElement.textContent = formatName(currentAnnounced[w].name);
+        } else {
+          announcedElement.textContent = '—';
+        }
+
+        // Show queue list
+        if (entries.length === 0) {
+          queueElement.innerHTML = '<div class="queue-empty">No one in queue</div>';
+        } else {
+          queueElement.innerHTML = entries.map((entry, idx) => `
+            <div class="queue-item">
+              <div class="queue-number">${idx + 1}</div>
+              <div class="queue-name">${escapeHtml(formatName(entry.name))}</div>
+              <button class="btn-danger" onclick="removeFromQueue('${entry.key}')">×</button>
+            </div>
+          `).join('');
+        }
+      });
     }
 
-    function renderAnnounced(entry) {
-      const announced = document.getElementById('announcedName');
-      const announcedWindow = document.getElementById('announcedWindow');
-
-      if (entry) {
-        announced.textContent = formatName(entry.name);
-        announcedWindow.textContent = entry.window ? ('Please proceed to ' + entry.window) : '';
-      } else {
-        announced.textContent = '—';
-        announcedWindow.textContent = '';
-      }
-    }
-
-    // Live sync: fires immediately on load and every time the data changes,
-    // from any device.
+    // Live sync: fires immediately and on every change, from any device
     queueRef.orderByChild('timestamp').on('value', (snapshot) => {
-      const entries = [];
+      const grouped = { 'Window 1': [], 'Window 2': [], 'Window 3': [] };
       snapshot.forEach((child) => {
         const val = child.val();
-        entries.push({ key: child.key, name: val.name, window: val.window });
+        const w = val.window;
+        if (grouped[w]) {
+          grouped[w].push({ key: child.key, name: val.name });
+        }
       });
-      currentQueue = entries;
-      renderQueueList();
+      currentQueues = grouped;
+      renderAllWindows();
     });
 
-    let lastAnnounced = null;
     announcedRef.on('value', (snapshot) => {
-      lastAnnounced = snapshot.val();
-      renderAnnounced(lastAnnounced);
+      currentAnnounced = snapshot.val() || {};
+      renderAllWindows();
     });
 
     function addToQueue() {
       const input = document.getElementById('nameInput');
+      const windowSelect = document.getElementById('windowSelect');
       const name = input.value.trim();
-      const windowChoice = document.getElementById('windowSelect').value;
+      const windowChoice = windowSelect.value;
 
-      if (!name) {
-        input.focus();
+      if (!name || !windowChoice) {
+        alert('Please enter name and select window');
         return;
       }
 
@@ -497,6 +574,7 @@
       });
 
       input.value = '';
+      windowSelect.value = '';
       input.focus();
     }
 
@@ -505,85 +583,72 @@
     }
 
     function playBellSound() {
-      // Create a simple bell sound using Web Audio API
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const now = audioContext.currentTime;
-      
-      // Bell sound frequencies
-      const frequencies = [800, 600, 400];
-      
-      frequencies.forEach((freq, index) => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        const frequencies = [800, 600, 400];
         
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.3, now + index * 0.1);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.1 + 0.3);
-        
-        osc.start(now + index * 0.1);
-        osc.stop(now + index * 0.1 + 0.3);
-      });
+        frequencies.forEach((freq, index) => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.3, now + index * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.1 + 0.3);
+          osc.start(now + index * 0.1);
+          osc.stop(now + index * 0.1 + 0.3);
+        });
+      } catch (e) {
+        console.log('Bell sound error:', e);
+      }
     }
 
     function speakName(name, windowChoice) {
-      // Check if browser supports Web Speech API
       const SpeechSynthesisUtterance = window.SpeechSynthesisUtterance || window.webkitSpeechSynthesisUtterance;
       
-      if (!SpeechSynthesisUtterance) {
-        console.log('Text-to-speech not supported');
-        return;
-      }
+      if (!SpeechSynthesisUtterance) return;
 
-      // Cancel any ongoing speech
       speechSynthesis.cancel();
 
       const text = windowChoice ? (name + ', ' + windowChoice) : name;
 
-      // First announcement
       const utterance1 = new SpeechSynthesisUtterance();
       utterance1.text = text;
-      utterance1.lang = 'tl-PH'; // Tagalog/Filipino language
-      utterance1.rate = 0.75; // Slower for clearer pronunciation
+      utterance1.lang = 'tl-PH';
+      utterance1.rate = 0.75;
       utterance1.pitch = 1;
       utterance1.volume = 1;
-      
-      // Speak first time
       speechSynthesis.speak(utterance1);
       
-      // Second announcement after 3 seconds
       setTimeout(() => {
         const utterance2 = new SpeechSynthesisUtterance();
         utterance2.text = text;
         utterance2.lang = 'tl-PH';
-        utterance2.rate = 0.75; // Slower for clearer pronunciation
+        utterance2.rate = 0.75;
         utterance2.pitch = 1;
         utterance2.volume = 1;
-        
         speechSynthesis.speak(utterance2);
-      }, 3000); // 3 second delay
+      }, 3000);
     }
 
-    function announceNext() {
-      if (currentQueue.length === 0) return;
+    function announceNext(windowChoice) {
+      const entries = currentQueues[windowChoice] || [];
+      if (entries.length === 0) return;
 
-      const next = currentQueue[0]; // earliest by timestamp
-      const announcedEntry = { name: next.name, window: next.window };
+      const next = entries[0]; // earliest by timestamp
+      const nameToAnnounce = next.name;
 
-      announcedRef.set(announcedEntry).then(() => {
+      announcedRef.child(windowChoice).set({ name: nameToAnnounce }).then(() => {
         return queueRef.child(next.key).remove();
       }).then(() => {
-        // Play sound effect
         if (document.getElementById('enableSound').checked) {
           playBellSound();
         }
 
-        // Announce name and window
         if (document.getElementById('enableVoice').checked) {
           setTimeout(() => {
-            speakName(announcedEntry.name, announcedEntry.window);
+            speakName(nameToAnnounce, windowChoice);
           }, 500);
         }
       }).catch((err) => {
@@ -592,38 +657,12 @@
       });
     }
 
-    function resetAnnounced() {
-      announcedRef.remove();
+    function resetAnnounced(windowChoice) {
+      announcedRef.child(windowChoice).remove();
     }
 
-    function clearQueue() {
-      if (confirm('Clear all entries in the queue?')) {
-        queueRef.remove();
-        announcedRef.remove();
-      }
-    }
-
-    document.getElementById('nameInput').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addToQueue();
-    });
-
-    // Auto-add name from URL parameter (for QR codes)
-    function checkUrlParams() {
-      const params = new URLSearchParams(window.location.search);
-      const name = params.get('name');
-      const windowChoice = params.get('window');
-      if (name) {
-        queueRef.push({
-          name: decodeURIComponent(name),
-          window: windowChoice ? decodeURIComponent(windowChoice) : 'Window 1',
-          timestamp: firebase.database.ServerValue.TIMESTAMP
-        });
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-
-    checkUrlParams();
+    // Initial render (Firebase listeners above call this once data arrives)
+    renderAllWindows();
   </script>
 </body>
 </html>

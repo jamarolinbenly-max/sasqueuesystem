@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#378ADD">
-  <title>DSAS Queue System</title>
+  <title>SAS Queuing System</title>
   <style>
     * {
       margin: 0;
@@ -37,8 +37,64 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-start;
+      padding: 0;
+      margin: 0;
+    }
+
+    .navbar {
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-sizing: border-box;
+    }
+
+    .navbar-brand {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .navbar-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.3s;
+      border-bottom: 2px solid transparent;
+      padding-bottom: 0.25rem;
+      cursor: pointer;
+    }
+
+    .navbar-links a:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .navbar-links a.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
       padding: 1rem;
+      width: 100%;
     }
 
     .container {
@@ -167,6 +223,22 @@
     }
 
     @media (max-width: 768px) {
+      .navbar {
+        padding: 0.75rem 1rem;
+      }
+
+      .navbar-brand {
+        font-size: 16px;
+      }
+
+      .navbar-links {
+        gap: 1rem;
+      }
+
+      .navbar-links a {
+        font-size: 12px;
+      }
+
       .header h1 {
         font-size: 36px;
       }
@@ -191,43 +263,52 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>🏢 SAS Queuing System</h1>
-      <p>Manage your queue efficiently</p>
+  <nav class="navbar">
+    <div class="navbar-brand">SAS Queuing System</div>
+    <div class="navbar-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="queue-app.html">Admin Dashboard</a>
+      <a href="signup.html">Join Queue</a>
     </div>
+  </nav>
 
-    <div class="cards-grid">
-      <div class="card">
-        <div class="card-icon">🖥️</div>
-        <h2>Admin Dashboard</h2>
-        <p>View the queue, call next person, manage entries. Keep this open on your desk.</p>
-        <a href="queue-app.html" class="card-link">Open Dashboard →</a>
+  <div class="content-wrapper">
+    <div class="container">
+      <div class="header">
+        <h1>SAS Queuing System</h1>
+        <p>Manage your queue efficiently</p>
       </div>
 
-      <div class="card">
-        <div class="card-icon">📋</div>
-        <h2>Join Queue</h2>
-        <p>Customers use this to enter their name and join the queue.</p>
-        <a href="signup.html" class="card-link">Join Queue →</a>
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon">🖥️</div>
+          <h2>Admin Dashboard</h2>
+          <p>View the queue, call next person, manage entries. Keep this open on your desk.</p>
+          <a href="queue-app.html" class="card-link">Open Dashboard →</a>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">📋</div>
+          <h2>Join Queue</h2>
+          <p>Customers use this to enter their name and join the queue.</p>
+          <a href="signup.html" class="card-link">Join Queue →</a>
+        </div>
       </div>
-    </div>
 
-    <div class="info-box">
-      <h3>⚙️ Setup Instructions</h3>
-      <ol>
-        <li><span class="step-number">Step 1:</span> Open "Admin Dashboard" on your desk/tablet - keep it open</li>
-        <li><span class="step-number">Step 2:</span> Share the "Join Queue" link or display QR code at your entrance</li>
-        <li><span class="step-number">Step 3:</span> When customers click the link or scan QR, they enter their name</li>
-        <li><span class="step-number">Step 4:</span> Their name appears instantly in your Admin Dashboard</li>
-        <li><span class="step-number">Step 5:</span> Click "Call Next" to announce and display the next customer</li>
-      </ol>
-    </div>
+      <div class="info-box">
+        <h3>⚙️ Setup Instructions</h3>
+        <ol>
+          <li><span class="step-number">Step 1:</span> Open "Admin Dashboard" on your desk/tablet - keep it open</li>
+          <li><span class="step-number">Step 2:</span> Share the "Join Queue" link or display QR code at your entrance</li>
+          <li><span class="step-number">Step 3:</span> When customers click the link or scan QR, they enter their name</li>
+          <li><span class="step-number">Step 4:</span> Their name appears instantly in your Admin Dashboard</li>
+          <li><span class="step-number">Step 5:</span> Click "Call Next" to announce and display the next customer</li>
+        </ol>
+      </div>
 
-
-
-    <div class="footer">
-      <p>© SAS Queuing System | All data stored securely on your device</p>
+      <div class="footer">
+        <p>© SAS Queuing System | All data stored securely on your device</p>
+      </div>
     </div>
   </div>
 </body>
