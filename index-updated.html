@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#378ADD">
+  <title>SAS Queuing System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --blue: #1a3a52;
+      --blue-dark: #0f2438;
+      --gold: #D4AF37;
+      --gray-light: #F5F5F5;
+      --gray-bg: #FAFAF8;
+      --gray-border: #D3D1C7;
+      --gray-text: #2C2C2C;
+      --gray-text-light: #666666;
+      --white: #FFFFFF;
+      --radius: 8px;
+    }
+
+    html, body {
+      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      min-height: 100vh;
+      color: var(--gray-text);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0;
+      margin: 0;
+    }
+
+    .navbar {
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-sizing: border-box;
+    }
+
+    .navbar-brand {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .navbar-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.3s;
+      border-bottom: 2px solid transparent;
+      padding-bottom: 0.25rem;
+      cursor: pointer;
+    }
+
+    .navbar-links a:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .navbar-links a.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      width: 100%;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .header {
+      text-align: center;
+      color: var(--white);
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--white) 0%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 18px;
+      opacity: 0.95;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-icon {
+      font-size: 56px;
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--gray-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--gray-text-light);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .card-link {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 1rem 2rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: 2px solid var(--gold);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .card-link:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(26, 58, 82, 0.4);
+      background: linear-gradient(135deg, var(--gold) 0%, #C9A227 100%);
+    }
+
+    .info-box {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      border-top: 4px solid var(--gold);
+    }
+
+    .info-box h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gray-text);
+      margin-bottom: 1rem;
+    }
+
+    .info-box ol {
+      margin-left: 1.5rem;
+      color: var(--gray-text);
+      line-height: 2;
+    }
+
+    .info-box li {
+      margin-bottom: 0.75rem;
+    }
+
+    .step-number {
+      font-weight: 600;
+      color: var(--gold);
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--white);
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 0.75rem 1rem;
+      }
+
+      .navbar-brand {
+        font-size: 16px;
+      }
+
+      .navbar-links {
+        gap: 1rem;
+      }
+
+      .navbar-links a {
+        font-size: 12px;
+      }
+
+      .header h1 {
+        font-size: 36px;
+      }
+
+      .header p {
+        font-size: 16px;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+
+      .card h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">SAS Queuing System</div>
+    <div class="navbar-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="queue-app.html">Admin Dashboard</a>
+      <a href="signup.html">Join Queue</a>
+    </div>
+  </nav>
+
+  <div class="content-wrapper">
+    <div class="container">
+      <div class="header">
+        <h1>SAS Queuing System</h1>
+        <p>Manage your queue efficiently</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon">🖥️</div>
+          <h2>Admin Dashboard</h2>
+          <p>View the queue, call next person, manage entries. Keep this open on your desk.</p>
+          <a href="queue-app.html" class="card-link">Open Dashboard →</a>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">📋</div>
+          <h2>Join Queue</h2>
+          <p>Customers use this to enter their name and join the queue.</p>
+          <a href="signup.html" class="card-link">Join Queue →</a>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h3>⚙️ Setup Instructions</h3>
+        <ol>
+          <li><span class="step-number">Step 1:</span> Open "Admin Dashboard" on your desk/tablet - keep it open</li>
+          <li><span class="step-number">Step 2:</span> Share the "Join Queue" link or display QR code at your entrance</li>
+          <li><span class="step-number">Step 3:</span> When customers click the link or scan QR, they enter their name</li>
+          <li><span class="step-number">Step 4:</span> Their name appears instantly in your Admin Dashboard</li>
+          <li><span class="step-number">Step 5:</span> Click "Call Next" to announce and display the next customer</li>
+        </ol>
+      </div>
+
+      <div class="footer">
+        <p>© SAS Queuing System | All data stored securely on your device</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

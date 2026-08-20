@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Multi-window queue management system">
+  <title>SAS Queuing System - Admin Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --blue: #1a3a52;
+      --blue-dark: #0f2438;
+      --gold: #D4AF37;
+      --gray-light: #F5F5F5;
+      --gray-bg: #FAFAF8;
+      --gray-border: #D3D1C7;
+      --gray-text: #2C2C2C;
+      --gray-text-light: #666666;
+      --red: #D32F2F;
+      --white: #FFFFFF;
+      --radius: 8px;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--gray-bg);
+      color: var(--gray-text);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .navbar-brand {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .navbar-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .navbar-links a {
+      color: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.3s;
+      border-bottom: 2px solid transparent;
+      padding-bottom: 0.25rem;
+    }
+
+    .navbar-links a:hover {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .navbar-links a.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 65px);
+      background: var(--white);
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .input-section {
+      background: var(--gray-bg);
+      border: 1px solid var(--gray-border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="text"], select {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid var(--gray-border);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.1);
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      border: 2px solid var(--gold);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--gold) 0%, #C9A227 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 58, 82, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--gray-border);
+      color: var(--gray-text);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-light);
+    }
+
+    .btn-danger {
+      background: transparent;
+      border: 1px solid var(--red);
+      color: var(--red);
+      padding: 0.5rem 0.75rem;
+      font-size: 12px;
+    }
+
+    .btn-danger:hover {
+      background: rgba(211, 47, 47, 0.1);
+    }
+
+    .windows-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .window-card {
+      background: var(--white);
+      border: 2px solid var(--gray-border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .window-header {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      padding: 0.75rem;
+      border-radius: 6px;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .announce-display {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+      color: var(--white);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      border-top: 3px solid var(--gold);
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .announce-label {
+      font-size: 11px;
+      opacity: 0.9;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.3rem;
+    }
+
+    .announce-name {
+      font-size: 28px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .queue-list {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid var(--gray-border);
+      border-radius: 6px;
+      background: var(--gray-bg);
+      margin-bottom: 0.75rem;
+      min-height: 100px;
+    }
+
+    .queue-empty {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      color: var(--gray-text-light);
+      font-size: 12px;
+    }
+
+    .queue-item {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--gray-border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: background 0.2s;
+    }
+
+    .queue-item:hover {
+      background: var(--white);
+    }
+
+    .queue-item:last-child {
+      border-bottom: none;
+    }
+
+    .queue-number {
+      background: var(--blue);
+      color: var(--white);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .queue-name {
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--gray-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .window-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .window-buttons button {
+      flex: 1;
+      padding: 0.6rem 0.75rem;
+      font-size: 13px;
+    }
+
+    .settings {
+      background: var(--gray-light);
+      padding: 0.75rem;
+      border-radius: var(--radius);
+      margin-top: 1rem;
+    }
+
+    .settings label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 0.4rem;
+    }
+
+    .settings label:last-child {
+      margin-bottom: 0;
+    }
+
+    input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    @media (max-width: 1200px) {
+      .windows-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 0.75rem 1rem;
+      }
+
+      .navbar-brand {
+        font-size: 16px;
+      }
+
+      .navbar-links {
+        gap: 1rem;
+      }
+
+      .navbar-links a {
+        font-size: 12px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .content {
+        padding: 0.75rem;
+        gap: 0.75rem;
+      }
+
+      .windows-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .window-card {
+        padding: 0.75rem;
+      }
+
+      .announce-name {
+        font-size: 24px;
+      }
+
+      button {
+        padding: 0.6rem 1rem;
+        font-size: 13px;
+      }
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">SAS Queuing System</div>
+    <div class="navbar-links">
+      <a href="index.html">Home</a>
+      <a href="queue-app.html" class="active">Admin Dashboard</a>
+      <a href="signup.html">Join Queue</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="header">
+      <h1>SAS Queuing System - Multi-Window Dashboard</h1>
+    </div>
+
+    <div class="content">
+      <div class="input-section">
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="nameInput" 
+            placeholder="Enter name"
+            autocomplete="off"
+            onkeypress="if(event.key==='Enter') addToQueue()"
+          >
+          <select id="windowSelect" style="width: 140px;">
+            <option value="">Select Window</option>
+            <option value="Window 1">Window 1</option>
+            <option value="Window 2">Window 2</option>
+            <option value="Window 3">Window 3</option>
+          </select>
+          <button class="btn-primary" onclick="addToQueue()">Add</button>
+        </div>
+      </div>
+
+      <div class="windows-grid scrollbar-hide" id="windowsGrid"></div>
+    </div>
+  </div>
+
+  <div class="settings">
+    <label>
+      <input type="checkbox" id="enableVoice" checked>
+      Read name aloud in Tagalog when calling next
+    </label>
+    <label>
+      <input type="checkbox" id="enableSound" checked>
+      Play bell sound when calling next
+    </label>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'queue_system_data';
+    const WINDOWS = ['Window 1', 'Window 2', 'Window 3'];
+
+    function loadQueue() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) {
+          return {
+            'Window 1': { queue: [], announced: null },
+            'Window 2': { queue: [], announced: null },
+            'Window 3': { queue: [], announced: null }
+          };
+        }
+        return JSON.parse(data);
+      } catch {
+        return {
+          'Window 1': { queue: [], announced: null },
+          'Window 2': { queue: [], announced: null },
+          'Window 3': { queue: [], announced: null }
+        };
+      }
+    }
+
+    function saveQueue(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('Storage error:', e);
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderAllWindows() {
+      const data = loadQueue();
+      const grid = document.getElementById('windowsGrid');
+      
+      grid.innerHTML = WINDOWS.map(window => `
+        <div class="window-card">
+          <div class="window-header">${window}</div>
+          
+          <div class="announce-display">
+            <div class="announce-label">Now Calling</div>
+            <div class="announce-name" id="announced-${window}">—</div>
+          </div>
+
+          <div class="queue-list scrollbar-hide" id="queue-${window}">
+            <div class="queue-empty">No one in queue</div>
+          </div>
+
+          <div class="window-buttons">
+            <button class="btn-primary" onclick="announceNext('${window}')">Call Next</button>
+            <button class="btn-secondary" onclick="resetAnnounced('${window}')">Reset</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Render queue for each window
+      WINDOWS.forEach(window => {
+        const windowData = data[window];
+        const queueElement = document.getElementById(`queue-${window}`);
+        const announcedElement = document.getElementById(`announced-${window}`);
+
+        // Show announced person
+        if (windowData.announced) {
+          const name = typeof windowData.announced === 'string' ? windowData.announced : windowData.announced.name;
+          announcedElement.textContent = name;
+        } else {
+          announcedElement.textContent = '—';
+        }
+
+        // Show queue list
+        if (windowData.queue.length === 0) {
+          queueElement.innerHTML = '<div class="queue-empty">No one in queue</div>';
+        } else {
+          queueElement.innerHTML = windowData.queue.map((item, idx) => {
+            const name = typeof item === 'string' ? item : item.name;
+            return `
+              <div class="queue-item">
+                <div class="queue-number">${idx + 1}</div>
+                <div class="queue-name">${escapeHtml(name)}</div>
+                <button class="btn-danger" onclick="removeFromQueue('${window}', ${idx})">×</button>
+              </div>
+            `;
+          }).join('');
+        }
+      });
+    }
+
+    function addToQueue() {
+      const input = document.getElementById('nameInput');
+      const windowSelect = document.getElementById('windowSelect');
+      const name = input.value.trim();
+      const window = windowSelect.value;
+
+      if (!name || !window) {
+        alert('Please enter name and select window');
+        return;
+      }
+
+      const data = loadQueue();
+      data[window].queue.push(name);
+      saveQueue(data);
+      input.value = '';
+      windowSelect.value = '';
+      input.focus();
+      renderAllWindows();
+    }
+
+    function removeFromQueue(window, idx) {
+      const data = loadQueue();
+      data[window].queue.splice(idx, 1);
+      saveQueue(data);
+      renderAllWindows();
+    }
+
+    function playBellSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioContext.currentTime;
+        const frequencies = [800, 600, 400];
+        
+        frequencies.forEach((freq, index) => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.3, now + index * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.1 + 0.3);
+          osc.start(now + index * 0.1);
+          osc.stop(now + index * 0.1 + 0.3);
+        });
+      } catch (e) {
+        console.log('Bell sound error:', e);
+      }
+    }
+
+    function speakName(name) {
+      const SpeechSynthesisUtterance = window.SpeechSynthesisUtterance || window.webkitSpeechSynthesisUtterance;
+      
+      if (!SpeechSynthesisUtterance) return;
+
+      speechSynthesis.cancel();
+
+      const utterance1 = new SpeechSynthesisUtterance();
+      utterance1.text = name;
+      utterance1.lang = 'tl-PH';
+      utterance1.rate = 0.75;
+      utterance1.pitch = 1;
+      utterance1.volume = 1;
+      speechSynthesis.speak(utterance1);
+      
+      setTimeout(() => {
+        const utterance2 = new SpeechSynthesisUtterance();
+        utterance2.text = name;
+        utterance2.lang = 'tl-PH';
+        utterance2.rate = 0.75;
+        utterance2.pitch = 1;
+        utterance2.volume = 1;
+        speechSynthesis.speak(utterance2);
+      }, 3000);
+    }
+
+    function announceNext(window) {
+      const data = loadQueue();
+      if (data[window].queue.length > 0) {
+        data[window].announced = data[window].queue.shift();
+        saveQueue(data);
+        renderAllWindows();
+
+        if (document.getElementById('enableSound').checked) {
+          playBellSound();
+        }
+
+        if (document.getElementById('enableVoice').checked) {
+          setTimeout(() => {
+            const name = typeof data[window].announced === 'string' 
+              ? data[window].announced 
+              : data[window].announced.name;
+            speakName(name);
+          }, 500);
+        }
+      }
+    }
+
+    function resetAnnounced(window) {
+      const data = loadQueue();
+      data[window].announced = null;
+      saveQueue(data);
+      renderAllWindows();
+    }
+
+    // Initial render
+    renderAllWindows();
+  </script>
+</body>
+</html>
