@@ -325,19 +325,22 @@
           <span class="window-label">Select your window</span>
           <div class="window-options">
             <div class="window-option">
-              <input type="radio" name="window" id="window1" value="Window 1" checked>
+              <input type="radio" name="window" id="window1" value="Window 1" checked onchange="toggleWindow2Link()">
               <label for="window1">Window 1</label>
             </div>
             <div class="window-option">
-              <input type="radio" name="window" id="window2" value="Window 2">
+              <input type="radio" name="window" id="window2" value="Window 2" onchange="toggleWindow2Link()">
               <label for="window2">Window 2</label>
             </div>
             <div class="window-option">
-              <input type="radio" name="window" id="window3" value="Window 3">
+              <input type="radio" name="window" id="window3" value="Window 3" onchange="toggleWindow2Link()">
               <label for="window3">Window 3</label>
             </div>
           </div>
         </div>
+        <a href="https://sites.google.com/jrmsu.edu.ph/jrmsusasdipolog/student" target="_blank" rel="noopener" id="window2Link" style="display: none; text-decoration: none;">
+          <button type="button" class="secondary" style="margin-bottom: 1rem;">Student Requirements Portal ↗</button>
+        </a>
         <button onclick="submitName()">Join Queue</button>
         <p class="info-text">Your name will appear in the waiting list instantly</p>
       </div>
@@ -363,6 +366,11 @@
 
     function formatName(name) {
       return name.replace(/\S+/g, word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+    }
+
+    function toggleWindow2Link() {
+      const isWindow2 = document.getElementById('window2').checked;
+      document.getElementById('window2Link').style.display = isWindow2 ? 'block' : 'none';
     }
 
     function submitName() {
@@ -413,6 +421,7 @@
     function reset() {
       document.getElementById('nameInput').value = '';
       document.getElementById('window1').checked = true;
+      toggleWindow2Link();
       document.getElementById('successMessage').classList.remove('show');
       document.getElementById('formContainer').style.display = 'block';
       document.getElementById('nameInput').focus();
