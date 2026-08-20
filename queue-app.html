@@ -190,6 +190,38 @@
       background: rgba(211, 47, 47, 0.1);
     }
 
+    .btn-hold {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: #9C7A0E;
+    }
+
+    .btn-hold:hover:not(:disabled) {
+      background: rgba(212, 175, 55, 0.12);
+    }
+
+    .btn-hold:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .held-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9C7A0E;
+      margin-bottom: 0.4rem;
+    }
+
+    .held-list {
+      min-height: 60px;
+      max-height: 110px;
+      background: #FDF9EE;
+      border-color: var(--gold);
+      margin-bottom: 0;
+    }
+
     .windows-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -467,12 +499,14 @@
     const db = firebase.database();
     const queueRef = db.ref('queue');
     const announcedRef = db.ref('announced');
+    const heldRef = db.ref('held');
 
     const WINDOWS = ['Window 1', 'Window 2', 'Window 3'];
 
     // Grouped by window, rebuilt every time Firebase pushes an update
     let currentQueues = { 'Window 1': [], 'Window 2': [], 'Window 3': [] };
     let currentAnnounced = {};
+    let currentHeld = { 'Window 1': [], 'Window 2': [], 'Window 3': [] };
 
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -502,7 +536,13 @@
 
           <div class="window-buttons">
             <button class="btn-primary" onclick="announceNext('${w}')">Call Next</button>
+            <button class="btn-hold" onclick="holdCurrent('${w}')" id="hold-btn-${w}">Hold</button>
             <button class="btn-secondary" onclick="resetAnnounced('${w}')">Reset</button>
+          </div>
+
+          <div class="held-label">On Hold</div>
+          <div class="queue-list scrollbar-hide held-list" id="held-${w}">
+            <div class="queue-empty">No one on hold</div>
           </div>
         </div>
       `).join('');
@@ -510,13 +550,18 @@
       WINDOWS.forEach(w => {
         const queueElement = document.getElementById(`queue-${w}`);
         const announcedElement = document.getElementById(`announced-${w}`);
+        const heldElement = document.getElementById(`held-${w}`);
+        const holdBtn = document.getElementById(`hold-btn-${w}`);
         const entries = currentQueues[w] || [];
+        const heldEntries = currentHeld[w] || [];
 
         // Show announced person
         if (currentAnnounced[w] && currentAnnounced[w].name) {
           announcedElement.textContent = formatName(currentAnnounced[w].name);
+          holdBtn.disabled = false;
         } else {
           announcedElement.textContent = '—';
+          holdBtn.disabled = true;
         }
 
         // Show queue list
@@ -528,6 +573,19 @@
               <div class="queue-number">${idx + 1}</div>
               <div class="queue-name">${escapeHtml(formatName(entry.name))}</div>
               <button class="btn-danger" onclick="removeFromQueue('${entry.key}')">×</button>
+            </div>
+          `).join('');
+        }
+
+        // Show held list
+        if (heldEntries.length === 0) {
+          heldElement.innerHTML = '<div class="queue-empty">No one on hold</div>';
+        } else {
+          heldElement.innerHTML = heldEntries.map((entry) => `
+            <div class="queue-item">
+              <div class="queue-name">${escapeHtml(formatName(entry.name))}</div>
+              <button class="btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 11px;" onclick="recallHeld('${w}', '${entry.key}')">Call</button>
+              <button class="btn-danger" onclick="removeHeld('${w}', '${entry.key}')">×</button>
             </div>
           `).join('');
         }
@@ -550,6 +608,21 @@
 
     announcedRef.on('value', (snapshot) => {
       currentAnnounced = snapshot.val() || {};
+      renderAllWindows();
+    });
+
+    heldRef.on('value', (snapshot) => {
+      const grouped = { 'Window 1': [], 'Window 2': [], 'Window 3': [] };
+      snapshot.forEach((windowSnap) => {
+        const w = windowSnap.key;
+        if (!grouped[w]) return;
+        const entries = [];
+        windowSnap.forEach((child) => {
+          entries.push({ key: child.key, name: child.val().name });
+        });
+        grouped[w] = entries;
+      });
+      currentHeld = grouped;
       renderAllWindows();
     });
 
@@ -659,6 +732,47 @@
 
     function resetAnnounced(windowChoice) {
       announcedRef.child(windowChoice).remove();
+    }
+
+    function holdCurrent(windowChoice) {
+      const current = currentAnnounced[windowChoice];
+      if (!current || !current.name) return;
+
+      heldRef.child(windowChoice).push({
+        name: current.name,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        return announcedRef.child(windowChoice).remove();
+      }).catch((err) => {
+        alert('Could not put on hold. Check your connection.');
+        console.error(err);
+      });
+    }
+
+    function recallHeld(windowChoice, key) {
+      const heldEntries = currentHeld[windowChoice] || [];
+      const entry = heldEntries.find(e => e.key === key);
+      if (!entry) return;
+
+      announcedRef.child(windowChoice).set({ name: entry.name }).then(() => {
+        return heldRef.child(windowChoice).child(key).remove();
+      }).then(() => {
+        if (document.getElementById('enableSound').checked) {
+          playBellSound();
+        }
+        if (document.getElementById('enableVoice').checked) {
+          setTimeout(() => {
+            speakName(entry.name, windowChoice);
+          }, 500);
+        }
+      }).catch((err) => {
+        alert('Could not recall from hold. Check your connection.');
+        console.error(err);
+      });
+    }
+
+    function removeHeld(windowChoice, key) {
+      heldRef.child(windowChoice).child(key).remove();
     }
 
     // Initial render (Firebase listeners above call this once data arrives)
