@@ -307,10 +307,10 @@
         <div class="success-text">Your position in the queue</div>
         <div class="success-text">Please proceed to <span class="window-value" id="successWindow"></span> when called</div>
         <div class="success-text" id="successTransaction" style="display: none;">Transaction: <span class="window-value" id="successTransactionValue"></span></div>
-        <div id="window2Link" style="display: none;">
-          <div class="success-text" style="margin-top: 0.5rem;">Please proceed to the student portal to process your requirements</div>
-          <a href="https://sites.google.com/jrmsu.edu.ph/jrmsusasdipolog/student" target="_blank" rel="noopener" style="text-decoration: none;">
-            <button type="button" class="secondary" style="margin-top: 0.5rem;">Go to Student Portal ↗</button>
+        <div id="windowLink" style="display: none;">
+          <div class="success-text" id="windowLinkText" style="margin-top: 0.5rem;"></div>
+          <a href="#" target="_blank" rel="noopener" id="windowLinkAnchor" style="text-decoration: none;">
+            <button type="button" class="secondary" style="margin-top: 0.5rem;" id="windowLinkButton">Go to Portal ↗</button>
           </a>
         </div>
       </div>
@@ -389,22 +389,43 @@
       ],
       'Window 2': [
         'Certificate of Good Conduct',
+         'Parents Waiver',
+'Exemption Slip',
         'Processing of Student ID',
         'School ID Validation',
         'Student Clearance',
-        'Student Handbook Release',
-        'Parents Waiver',
-        'Exemption Slip'
+        'Student Handbook Release'
+
+
       ],
       'Window 3': [
         'Leave of Absence',
         'Certificate of Non-scholarship',
         'ID Verification',
         'TES Certificate',
-        'Certificate to Transfer',
-        'Releasing of Subsidy',
-        'Submitting of Requirements'
+ 'TDP Certificate',
+ 'Sumbitting of Requirements',
+ 'Releasing of Subsidy',
+        'Certificate to Transfer'
       ]
+    };
+
+    const WINDOW_LINKS = {
+      'Window 1': {
+        url: 'https://sites.google.com/d/1NFjUMsMUKbiX1ykwjo3PFU5dNNmKpRpu/p/1kt4YgGbXAgRyPvoepeJDZvzMrGPoSWuv/edit',
+        text: 'Please visit the link below to process your requirements',
+        button: 'Go to Portal ↗'
+      },
+      'Window 2': {
+        url: 'https://sites.google.com/d/1NFjUMsMUKbiX1ykwjo3PFU5dNNmKpRpu/p/1kt4YgGbXAgRyPvoepeJDZvzMrGPoSWuv/edit',
+        text: 'Please visit the link below to process your requirements',
+        button: 'Go to Portal ↗'
+      },
+      'Window 3': {
+        url: 'https://sites.google.com/jrmsu.edu.ph/stufaps-dipolog-campus/home',
+        text: 'Please proceed to the STUFAPS portal to process your requirements',
+        button: 'Go to STUFAPS Portal ↗'
+      }
     };
 
     function toggleTransactionField() {
@@ -461,7 +482,17 @@
         document.getElementById('successName').textContent = formatName(name);
         document.getElementById('queuePosition').textContent = position;
         document.getElementById('successWindow').textContent = windowChoice;
-        document.getElementById('window2Link').style.display = (windowChoice === 'Window 2') ? 'block' : 'none';
+
+        const linkInfo = WINDOW_LINKS[windowChoice];
+        if (linkInfo) {
+          document.getElementById('windowLinkText').textContent = linkInfo.text;
+          document.getElementById('windowLinkAnchor').href = linkInfo.url;
+          document.getElementById('windowLinkButton').textContent = linkInfo.button;
+          document.getElementById('windowLink').style.display = 'block';
+        } else {
+          document.getElementById('windowLink').style.display = 'none';
+        }
+
         if (transaction) {
           document.getElementById('successTransaction').style.display = 'block';
           document.getElementById('successTransactionValue').textContent = transaction;
@@ -486,7 +517,7 @@
       document.getElementById('window1').checked = true;
       document.getElementById('transactionSelect').value = '';
       toggleTransactionField();
-      document.getElementById('window2Link').style.display = 'none';
+      document.getElementById('windowLink').style.display = 'none';
       document.getElementById('successTransaction').style.display = 'none';
       document.getElementById('successMessage').classList.remove('show');
       document.getElementById('formContainer').style.display = 'block';
